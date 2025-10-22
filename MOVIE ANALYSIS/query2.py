@@ -9,17 +9,21 @@ from collections import defaultdict
 
 """
 
-Traccia : Prendere i voti e la popolarita dei film con un budget sopra i 20 milioni raggrapputati per genere
-    
-Risultati : Nome film || Genere || Popolarita || Voti 
+Task: Retrieve the votes and popularity of movies with a budget above $20 million, grouped by genre.
 
-Procedimento :
-1. Prendere i film in base al budget dal dataset movies_tables.csv (qua prendere la popolarita e vote_count)
-2.Ricerca incrocita con la tabella Genres_table.csv
-3.Prendo tutti i generi dall'array restituito, faccio la media della popularity e il totale dei voti
-    Output desiderato
-    ("Action", 12.5, 20345),  # genere, media popolarità, totale voti
-    ("Drama", 8.7, 12340),
+Results: Movie name || Genre || Popularity || Votes
+
+Procedure:
+1. Select movies based on budget from the dataset movies_table.csv (to get popularity and vote_count)
+2. Cross-reference with the Genres_table.csv file
+3. Collect all genres from the resulting array, calculate the average popularity and total votes
+
+Expected output:
+("Action", 12.5, 23435)
+("Drama", 8.7, 12340)
+# Format → (genre, average popularity, total votes)
+
+
 
 
 
@@ -30,7 +34,7 @@ Procedimento :
 
 def filter_movies_by_budget(dataset_csv, budget_limit=20_000_000):
     '''
-    Filtra i film tramite budget
+    Filters movies by budget.
     '''
 
     #Lista che contiene tutti i film
@@ -39,17 +43,17 @@ def filter_movies_by_budget(dataset_csv, budget_limit=20_000_000):
     with open(dataset_csv, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         required_columns = {'id', 'title', 'popularity', 'vote_count', 'budget'}
-        #Controllo delle colonne
+        # Column check
         if not required_columns.issubset(reader.fieldnames):
-            raise ValueError(f"Le colonne richieste {required_columns} non sono presenti nel dataset.")
-        #Costruzione dell'array filterd_movies
+            raise ValueError(f"The required columns {required_columns} are not present in the dataset.")
+        # Building the filtered_movies array
         for row in reader:
             try:
                 budget = float(row['budget'])
-                if budget > budget_limit:  #controllo del budget
+                if budget > budget_limit:  # Budget check
                     filtered_movies.append({
-                        #casting dei dati
-                        'id': row['id'],  # Aggiungi l'id
+                       # Data casting
+                        'id': row['id'],  # Add the id
                         'title': row['title'],
                         'popularity': float(row['popularity']),
                         'budget':float(row['budget']),
@@ -62,21 +66,21 @@ def filter_movies_by_budget(dataset_csv, budget_limit=20_000_000):
  
 def add_movie_genres_by_id(movies, genres_csv):
     """
-    Aggiunge i generi a ciascun film nell'array di film esistente basandosi sull'ID del film.
+    Adds genres to each movie in the existing movie array based on the movie ID.
 
     """
-    # Crea un dizionario per mappare gli ID dei film ai loro generi
+   # Create a dictionary to map movie IDs to their genres
     movie_genres_map = {}
 
     with open(genres_csv, mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
 
-        # Controlla la presenza delle colonne necessarie
+        # Check for the presence of the required columns
         required_columns = {'id', 'genres'}
         if not required_columns.issubset(reader.fieldnames):
-            raise ValueError(f"Le colonne richieste {required_columns} non sono presenti nel dataset.")
+            raise ValueError(f"The required columns {required_columns} are not present in the dataset.")
 
-         # Costruzione del dizionario movie_genres_map
+         # Building the movie_genres_map dictionary
         for row in reader:
             movie_id = row['id']
             genre = row['genres']
@@ -85,29 +89,29 @@ def add_movie_genres_by_id(movies, genres_csv):
             else:
                 movie_genres_map[movie_id] = [genre]
 
-    # Aggiunge i generi ai film esistenti
+    # Add genres to existing movies
     for movie in movies:
-        movie_id = movie.get('id')  # Assumendo che ci sia un campo 'id' nei film
-        movie['genres'] = movie_genres_map.get(movie_id, [])  # Aggiunge i generi o una lista vuota
+        movie_id = movie.get('id')  # Assuming there is an 'id' field in the movies
+        movie['genres'] = movie_genres_map.get(movie_id, [])  # Add genres or an empty list
 
     return movies
 movies = filter_movies_by_budget('movies_table.csv')
 
 def calculate_genre_statistics(movies):
     """
-    Calcola la media della popolarità e il totale dei voti per ogni genere.
+    Calculates the average popularity and total votes for each genre.
 
 
     """
 
-    # Dizionari per sommare popolarità e contare i voti per genere
+   # Dictionaries to sum popularity and count votes by genre
     genre_popularity = defaultdict(float) 
     genre_vote_count = defaultdict(int)
-    genre_movie_count = defaultdict(int)  #variabile utilizzata per la media 
+    genre_movie_count = defaultdict(int)  # Variable used for the average
 
-    # Itera sui film con 2 cicli for 
+   # Iterate over the movies using 2 for loops 
     for movie in movies:
-        #instanzia le varie variabili
+        # Instantiate the various variables
         genres = movie.get('genres', [])
         popularity = movie.get('popularity', 0.0)
         vote_count = movie.get('vote_count', 0)
@@ -117,7 +121,7 @@ def calculate_genre_statistics(movies):
             genre_vote_count[genre] += vote_count
             genre_movie_count[genre] += 1
 
-    # Calcola la media della popolarità per ogni genere
+   # Calculate the average popularity for each genre
     genre_statistics = []
     for genre in genre_popularity:
         avg_popularity = genre_popularity[genre] / genre_movie_count[genre]
@@ -127,7 +131,7 @@ def calculate_genre_statistics(movies):
     return genre_statistics
 def save_to_pickle(data, pickle_file):
     """
-    Salvataggio di un oggetto generico in un file pickle.
+    Saving a generic object to a pickle file.
     """
     try:
         with open(pickle_file, 'wb') as f:
@@ -137,13 +141,13 @@ def save_to_pickle(data, pickle_file):
         print(f"Error: {e}")
 def load_from_pickle(pickle_file):
     """
-    Funzione per prendere i dati da un file pickle.
+    Function to retrieve data from a pickle file.
     """
     try:
         with open(pickle_file, 'rb') as f:
             data = pickle.load(f)
         
-        print("Contenuto del file pickle:")
+        print("Pickle file content:")
         print("=" * 40)
         if isinstance(data, list):
             for i, item in enumerate(data, start=1):
@@ -165,4 +169,5 @@ output = calculate_genre_statistics(movies_with_genres)
 
 save_to_pickle(output,'query2.pkl')
 load_from_pickle('query2.pkl')
+
 
