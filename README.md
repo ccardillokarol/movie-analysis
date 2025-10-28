@@ -1,4 +1,4 @@
-# TMDB Movie Analysis — Group 310631
+# TMDB Movie Analysis 
 
 A data analysis project exploring insights from **The Movie Database (TMDB)**.  
 This repository includes Python scripts and output files that perform three analytical queries on a dataset of 5,000 movies, focusing on **revenue, popularity, and keyword trends**.
